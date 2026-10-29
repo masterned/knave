@@ -1,4 +1,4 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::hash::{Hash, Hasher};
 
 const MAX_ADDRESS: usize = 255;
 const OFFSET: usize = 2;
@@ -30,13 +30,13 @@ impl<H: Hasher> MachineFactory<H> {
     }
 }
 
-impl Default for MachineFactory<DefaultHasher> {
+impl<H: Hasher + Default> Default for MachineFactory<H> {
     fn default() -> Self {
-        Self::new(DefaultHasher::new())
+        Self::new(H::default())
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Machine {
     name: String,
     addr: usize,
@@ -49,6 +49,60 @@ impl Machine {
 
     pub fn addr(&self) -> usize {
         self.addr
+    }
+
+    pub fn collides_with(&self, other: &Self) -> bool {
+        self.name != other.name && self.addr == other.addr
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Machines(Vec<Machine>);
+
+impl From<Vec<Machine>> for Machines {
+    fn from(value: Vec<Machine>) -> Self {
+        Self(value)
+    }
+}
+
+impl Machines {
+    pub fn has_collisions(&self) -> bool {
+        let mut machines: Vec<Machine> = self.clone().0;
+        machines.sort_by(|a, b| a.name().cmp(b.name()));
+
+        let mut mi = machines.into_iter();
+        if let Some(cur) = mi.next() {
+            let mut cur = cur;
+            while let Some(next) = mi.next() {
+                let collide = cur.collides_with(&next);
+                if collide {
+                    return true;
+                }
+                cur = next;
+            }
+        }
+
+        false
+    }
+
+    pub fn is_consistent(&self) -> bool {
+        let mut machines: Vec<Machine> = self.clone().0;
+        machines.sort_by(|a, b| a.name().cmp(b.name()));
+
+        let mut mi = machines.into_iter();
+        if let Some(cur) = mi.next() {
+            let mut cur = cur;
+            while let Some(next) = mi.next() {
+                if cur.name() == next.name() {
+                    if cur.addr() != next.addr() {
+                        return false;
+                    }
+                }
+                cur = next;
+            }
+        }
+
+        true
     }
 }
 
