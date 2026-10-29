@@ -1,5 +1,6 @@
 use std::hash::Hasher;
 
+const SENTINEL_OCTET: u8 = 0xff;
 const POLYNOMIAL_HASH_MULTIPLIER: u64 = 31;
 
 #[derive(Default)]
@@ -11,7 +12,7 @@ impl Hasher for AmnesiacRollingHostnameHasher {
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        if bytes == [255] {
+        if bytes == [SENTINEL_OCTET] {
             return;
         }
 
