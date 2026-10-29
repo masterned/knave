@@ -1,26 +1,21 @@
-use knave::{
-    RollingHostnameHasher,
-    machine::{MachineFactory, Machines},
-};
+use knave::{MachineFactory, Machines, RollingHostnameHasher};
 
 fn main() {
-    let mf: MachineFactory<RollingHostnameHasher> = MachineFactory::default();
-
-    let mut machines: Vec<_> = [
-        "azarath", "cassea", "cygnus", "damdom", "elowyn", "saira", "seamus", "elucia", "azarath",
+    let mf = MachineFactory::<RollingHostnameHasher>::default();
+    let ms: Vec<_> = [
+        "azarath", "cassea", "cygnus", "damdom", "elowyn", "elucia", "saira", "seamus",
     ]
     .iter()
-    .map(|&n| mf.mk_machine(n))
+    .map(|&m| mf.mk_machine(m))
     .collect();
 
-    machines.sort_by(|a, b| a.addr().cmp(&b.addr()));
-    for machine in &machines {
-        println!("{:?}", machine);
+    for m in &ms {
+        println!("{m:?}");
     }
 
     println!();
 
-    let ms: Machines = machines.into();
-    println!("consistent?: {}", ms.is_consistent());
+    let ms: Machines = ms.into();
     println!("collisions?: {}", ms.has_collisions());
+    println!("consistent?: {}", ms.is_consistent());
 }

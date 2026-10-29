@@ -42,7 +42,7 @@ pub struct Machine {
 }
 
 impl Machine {
-    pub fn name(&self) -> &str {
+    pub fn hostname(&self) -> &str {
         &self.hostname
     }
 
@@ -52,6 +52,10 @@ impl Machine {
 
     pub fn collides_with(&self, other: &Self) -> bool {
         self.hostname != other.hostname && self.addr == other.addr
+    }
+
+    pub fn is_inconsistent_with(&self, other: &Self) -> bool {
+        self.hostname == other.hostname && self.addr != other.addr
     }
 }
 
@@ -67,14 +71,13 @@ impl From<Vec<Machine>> for Machines {
 impl Machines {
     pub fn has_collisions(&self) -> bool {
         let mut machines: Vec<Machine> = self.clone().0;
-        machines.sort_by(|a, b| a.name().cmp(b.name()));
+        machines.sort_by_key(Machine::addr);
 
         let mut mi = machines.into_iter();
         if let Some(cur) = mi.next() {
             let mut cur = cur;
-            while let Some(next) = mi.next() {
-                let collide = cur.collides_with(&next);
-                if collide {
+            for next in mi {
+                if cur.collides_with(&next) {
                     return true;
                 }
                 cur = next;
@@ -86,16 +89,14 @@ impl Machines {
 
     pub fn is_consistent(&self) -> bool {
         let mut machines: Vec<Machine> = self.clone().0;
-        machines.sort_by(|a, b| a.name().cmp(b.name()));
+        machines.sort_by(|a, b| a.hostname().cmp(b.hostname()));
 
         let mut mi = machines.into_iter();
         if let Some(cur) = mi.next() {
             let mut cur = cur;
-            while let Some(next) = mi.next() {
-                if cur.name() == next.name() {
-                    if cur.addr() != next.addr() {
-                        return false;
-                    }
+            for next in mi {
+                if cur.is_inconsistent_with(&next) {
+                    return false;
                 }
                 cur = next;
             }

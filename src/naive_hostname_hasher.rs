@@ -1,9 +1,9 @@
 use std::hash::Hasher;
 
 #[derive(Default)]
-pub struct NaiveStrHasher(u64);
+pub struct NaiveHostnameHasher(u64);
 
-impl Hasher for NaiveStrHasher {
+impl Hasher for NaiveHostnameHasher {
     fn finish(&self) -> u64 {
         self.0
     }
