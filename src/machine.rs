@@ -1,4 +1,7 @@
-use std::hash::{Hash, Hasher};
+use std::{
+    hash::{Hash, Hasher},
+    marker::PhantomData,
+};
 
 const MAX_ADDRESS: usize = 255;
 const OFFSET: usize = 2;
@@ -7,44 +10,40 @@ fn address_clamp(number: usize) -> usize {
     (number % (MAX_ADDRESS - OFFSET)) + OFFSET
 }
 
-pub struct MachineFactory<H: Hasher>(H);
+#[derive(Default)]
+pub struct MachineFactory<H: Hasher>(PhantomData<H>);
 
-impl<H: Hasher> MachineFactory<H> {
-    pub fn new(hasher: H) -> MachineFactory<H> {
-        MachineFactory(hasher)
+impl<H: Hasher + Default> MachineFactory<H> {
+    pub fn new() -> MachineFactory<H> {
+        Self::default()
     }
 
-    fn hash_name(&mut self, word: &str) -> usize {
-        word.hash(&mut self.0);
-        self.0.finish() as usize
+    fn hash_hostname(&self, word: &str) -> usize {
+        let mut hasher = H::default();
+        word.hash(&mut hasher);
+        hasher.finish() as usize
     }
 
-    fn name_to_addr(&mut self, name: &str) -> usize {
-        address_clamp(self.hash_name(name))
+    fn hostname_to_addr(&self, name: &str) -> usize {
+        address_clamp(self.hash_hostname(name))
     }
 
-    pub fn mk_machine(&mut self, name: impl Into<String>) -> Machine {
-        let name = name.into();
-        let addr = self.name_to_addr(&name);
-        Machine { name, addr }
-    }
-}
-
-impl<H: Hasher + Default> Default for MachineFactory<H> {
-    fn default() -> Self {
-        Self::new(H::default())
+    pub fn mk_machine(&self, hostname: impl Into<String>) -> Machine {
+        let hostname = hostname.into();
+        let addr = self.hostname_to_addr(&hostname);
+        Machine { hostname, addr }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Machine {
-    name: String,
+    hostname: String,
     addr: usize,
 }
 
 impl Machine {
     pub fn name(&self) -> &str {
-        &self.name
+        &self.hostname
     }
 
     pub fn addr(&self) -> usize {
@@ -52,7 +51,7 @@ impl Machine {
     }
 
     pub fn collides_with(&self, other: &Self) -> bool {
-        self.name != other.name && self.addr == other.addr
+        self.hostname != other.hostname && self.addr == other.addr
     }
 }
 

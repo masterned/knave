@@ -1,10 +1,10 @@
 use knave::{
-    AmnesiacRollingHostnameHasher,
+    RollingHostnameHasher,
     machine::{MachineFactory, Machines},
 };
 
 fn main() {
-    let mut mf: MachineFactory<AmnesiacRollingHostnameHasher> = MachineFactory::default();
+    let mf: MachineFactory<RollingHostnameHasher> = MachineFactory::default();
 
     let mut machines: Vec<_> = [
         "azarath", "cassea", "cygnus", "damdom", "elowyn", "saira", "seamus", "elucia", "azarath",
