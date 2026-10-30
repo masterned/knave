@@ -72,37 +72,15 @@ impl Machines {
     pub fn has_collisions(&self) -> bool {
         let mut machines: Vec<Machine> = self.clone().0;
         machines.sort_by_key(Machine::addr);
-
-        let mut mi = machines.into_iter();
-        if let Some(cur) = mi.next() {
-            let mut cur = cur;
-            for next in mi {
-                if cur.collides_with(&next) {
-                    return true;
-                }
-                cur = next;
-            }
-        }
-
-        false
+        machines.windows(2).any(|ms| ms[0].collides_with(&ms[1]))
     }
 
     pub fn is_consistent(&self) -> bool {
         let mut machines: Vec<Machine> = self.clone().0;
         machines.sort_by(|a, b| a.hostname().cmp(b.hostname()));
-
-        let mut mi = machines.into_iter();
-        if let Some(cur) = mi.next() {
-            let mut cur = cur;
-            for next in mi {
-                if cur.is_inconsistent_with(&next) {
-                    return false;
-                }
-                cur = next;
-            }
-        }
-
-        true
+        !machines
+            .windows(2)
+            .any(|ms| ms[0].is_inconsistent_with(&ms[1]))
     }
 }
 
@@ -116,5 +94,75 @@ mod tests {
         assert_ne!(address_clamp(1), 1);
         assert_ne!(address_clamp(255), 255);
         assert!(address_clamp(256) < 255);
+    }
+
+    #[test]
+    fn _collides_on_different_hostnames_same_addr() {
+        let ms = Machines(vec![
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "b".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "a".to_string(),
+                addr: 2,
+            },
+        ]);
+        assert!(ms.has_collisions());
+
+        let ms = Machines(vec![
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "b".to_string(),
+                addr: 2,
+            },
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+        ]);
+        assert!(!ms.has_collisions());
+    }
+
+    #[test]
+    fn _consistent_when_same_hostname_has_same_addr() {
+        let ms = Machines(vec![
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "b".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "a".to_string(),
+                addr: 2,
+            },
+        ]);
+        assert!(!ms.is_consistent());
+
+        let ms = Machines(vec![
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+            Machine {
+                hostname: "b".to_string(),
+                addr: 2,
+            },
+            Machine {
+                hostname: "a".to_string(),
+                addr: 1,
+            },
+        ]);
+        assert!(ms.is_consistent());
     }
 }
