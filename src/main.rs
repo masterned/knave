@@ -11,7 +11,7 @@ fn main() {
         .arg_required_else_help(true);
     let matches = cmd.get_matches();
 
-    let mf = MachineFactory::<RollingHostnameHasher>::default();
+    let mf = MachineFactory::new(RollingHostnameHasher::default);
 
     let hostname = matches.get_one::<String>("hostname").unwrap();
     let machine = mf.mk_machine(hostname);

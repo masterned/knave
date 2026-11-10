@@ -8,7 +8,7 @@ use knave::{
     RollingHostnameHasher,
 };
 
-const HOSTNAMES: [&'static str; 16] = [
+const HOSTNAMES: [&str; 16] = [
     "azarath",
     "azarath",
     "cassea",
@@ -55,7 +55,7 @@ impl Hasher for LaplaceHasher {
     fn write(&mut self, _bytes: &[u8]) {}
 }
 
-fn mk_machines<H: Hasher + Default>(mf: MachineFactory<H>) -> Machines {
+fn mk_machines<H: Hasher, F: Fn() -> H>(mf: MachineFactory<H, F>) -> Machines {
     HOSTNAMES
         .iter()
         .map(|&m| mf.mk_machine(m))
@@ -66,14 +66,14 @@ fn mk_machines<H: Hasher + Default>(mf: MachineFactory<H>) -> Machines {
 #[test]
 #[should_panic]
 fn _default_collision() {
-    let ms = mk_machines(MachineFactory::<DefaultHasher>::default());
+    let ms = mk_machines(MachineFactory::new(DefaultHasher::default));
 
     assert!(!ms.has_collisions());
 }
 
 #[test]
 fn _default_consistency() {
-    let ms = mk_machines(MachineFactory::<DefaultHasher>::default());
+    let ms = mk_machines(MachineFactory::new(DefaultHasher::default));
 
     assert!(ms.is_consistent());
 }
@@ -81,42 +81,42 @@ fn _default_consistency() {
 #[test]
 #[should_panic]
 fn _naive_collision() {
-    let ms = mk_machines(MachineFactory::<NaiveHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(NaiveHostnameHasher::default));
 
     assert!(!ms.has_collisions());
 }
 
 #[test]
 fn _naive_consistency() {
-    let ms = mk_machines(MachineFactory::<NaiveHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(NaiveHostnameHasher::default));
 
     assert!(ms.is_consistent())
 }
 
 #[test]
 fn _amnesiac_collision() {
-    let ms = mk_machines(MachineFactory::<AmnesiacRollingHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(AmnesiacRollingHostnameHasher::default));
 
     assert!(!ms.has_collisions());
 }
 
 #[test]
 fn _amnesiac_consistency() {
-    let ms = mk_machines(MachineFactory::<AmnesiacRollingHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(AmnesiacRollingHostnameHasher::default));
 
     assert!(ms.is_consistent())
 }
 
 #[test]
 fn _rolling_collision() {
-    let ms = mk_machines(MachineFactory::<RollingHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(RollingHostnameHasher::default));
 
     assert!(!ms.has_collisions());
 }
 
 #[test]
 fn _rolling_consistency() {
-    let ms = mk_machines(MachineFactory::<RollingHostnameHasher>::default());
+    let ms = mk_machines(MachineFactory::new(RollingHostnameHasher::default));
 
     assert!(ms.is_consistent())
 }
@@ -125,14 +125,14 @@ fn _rolling_consistency() {
 #[should_panic]
 #[allow(non_snake_case)]
 fn _eMudhra_collision() {
-    let ms = mk_machines(MachineFactory::<eMudhraHasher>::default());
+    let ms = mk_machines(MachineFactory::new(eMudhraHasher::default));
     assert!(!ms.has_collisions());
 }
 
 #[test]
 #[allow(non_snake_case)]
 fn _eMudhra_consistency() {
-    let ms = mk_machines(MachineFactory::<eMudhraHasher>::default());
+    let ms = mk_machines(MachineFactory::new(eMudhraHasher::default));
     assert!(ms.is_consistent());
 }
 
@@ -141,6 +141,6 @@ fn _eMudhra_consistency() {
 /// Technically not a good test. Could fail under certain conditions. Test
 /// was mostly made for fun.
 fn _laplace_consistency() {
-    let ms = mk_machines(MachineFactory::<LaplaceHasher>::default());
+    let ms = mk_machines(MachineFactory::new(LaplaceHasher::default));
     assert!(ms.is_consistent());
 }

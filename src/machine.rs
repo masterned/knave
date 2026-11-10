@@ -10,16 +10,29 @@ fn address_clamp(number: usize) -> usize {
     (number % (MAX_ADDRESS - OFFSET)) + OFFSET
 }
 
-#[derive(Default)]
-pub struct MachineFactory<H: Hasher>(PhantomData<H>);
+pub struct MachineFactory<H, F>
+where
+    H: Hasher,
+    F: Fn() -> H,
+{
+    hasher_factory: F,
+    _marker: PhantomData<H>,
+}
 
-impl<H: Hasher + Default> MachineFactory<H> {
-    pub fn new() -> MachineFactory<H> {
-        Self::default()
+impl<H, F> MachineFactory<H, F>
+where
+    H: Hasher,
+    F: Fn() -> H,
+{
+    pub fn new(hasher_factory: F) -> MachineFactory<H, F> {
+        Self {
+            hasher_factory,
+            _marker: PhantomData,
+        }
     }
 
     fn hash_hostname(&self, word: &str) -> usize {
-        let mut hasher = H::default();
+        let mut hasher = (self.hasher_factory)();
         word.hash(&mut hasher);
         hasher.finish() as usize
     }
