@@ -13,7 +13,10 @@ fn main() {
 
     let mf = MachineFactory::new(RollingHostnameHasher::default);
 
-    let hostname = matches.get_one::<String>("hostname").unwrap();
-    let machine = mf.mk_machine(hostname);
-    println!("{machine:?}");
+    if let Some(hostname) = matches.get_one::<String>("hostname") {
+        let machine = mf.mk_machine(hostname);
+        println!("{machine}");
+    } else {
+        println!("Not sure how you got here...");
+    };
 }
