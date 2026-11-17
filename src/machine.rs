@@ -123,6 +123,74 @@ mod tests {
     }
 
     #[test]
+    fn _machine_collides_with_another_on_same_addr_different_hostname() {
+        assert!(
+            Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .collides_with(&Machine {
+                hostname: "b".into(),
+                addr: 1
+            })
+        );
+        assert!(
+            !Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .collides_with(&Machine {
+                hostname: "a".into(),
+                addr: 1
+            })
+        );
+        assert!(
+            !Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .collides_with(&Machine {
+                hostname: "b".into(),
+                addr: 2
+            })
+        );
+    }
+
+    #[test]
+    fn _machine_inconsistent_when_has_same_hostname_but_different_addr() {
+        assert!(
+            Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .is_inconsistent_with(&Machine {
+                hostname: "a".into(),
+                addr: 2
+            })
+        );
+        assert!(
+            !Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .is_inconsistent_with(&Machine {
+                hostname: "b".into(),
+                addr: 1
+            })
+        );
+        assert!(
+            !Machine {
+                addr: 1,
+                hostname: "a".into()
+            }
+            .is_inconsistent_with(&Machine {
+                hostname: "b".into(),
+                addr: 2
+            })
+        );
+    }
+
+    #[test]
     fn _collides_on_different_hostnames_same_addr() {
         let ms = Machines(vec![
             Machine {
