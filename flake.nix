@@ -15,31 +15,29 @@
 
   outputs =
     inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } (
-      { ... }: {
-        imports = [
-          inputs.rust-flake.flakeModules.default
-          inputs.rust-flake.flakeModules.nixpkgs
-        ];
-        perSystem =
-          { pkgs, self', ... }:
-          let
-            buildInputs = with pkgs; [ git ];
-          in
-          {
-            devShells.default = pkgs.mkShell {
-              inherit buildInputs;
-              inputsFrom = [
-                self'.devShells.rust
-              ];
-              nativeBuildInputs = with pkgs; [ pkg-config ];
-              packages = with pkgs; [ bacon ];
-              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
-            };
-            formatter = pkgs.nixfmt;
-            packages.default = self'.packages.knave;
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      imports = with inputs.rust-flake.flakeModules; [
+        default
+        nixpkgs
+      ];
+      perSystem =
+        { pkgs, self', ... }:
+        let
+          crateName = (fromTOML (builtins.readFile ./Cargo.toml)).package.name;
+          libs = with pkgs; [ ];
+        in
+        {
+          devShells.default = pkgs.mkShell {
+            inputsFrom = [ self'.devShells.rust ];
+            packages = with pkgs; [
+              git
+              jujutsu
+            ];
           };
-        systems = [ "x86_64-linux" ];
-      }
-    );
+          formatter = pkgs.nixfmt;
+          packages.default = self'.packages.${crateName};
+          rust-project.crates.${crateName}.crane.args.buildInputs = libs;
+        };
+      systems = [ "x86_64-linux" ];
+    };
 }
